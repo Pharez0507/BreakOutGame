@@ -1,7 +1,18 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Define level parameters
+let paddleWidth, paddleHeight, paddleSpeed, paddleX, ballRadius, x, y, dx, dy;
+let brickWidth, brickHeight, brickPadding, brickOffsetTop, brickOffsetLeft;
+let rightPressed = false;
+let leftPressed = false;
+let bricks = [];
+let score = 0;
+let lives = 3;
+let bricksHit = 0;
+let ballSpeed = 2;
+let powerUpDropped = false;
+let powerUpX, powerUpY, powerUpType;
+
 const levels = [
     { brickRowCount: 3, brickColumnCount: 8, brickSpeedMultiplier: 1 },
     { brickRowCount: 4, brickColumnCount: 10, brickSpeedMultiplier: 1.2 },
@@ -11,87 +22,39 @@ const levels = [
 ];
 
 let currentLevel = 0;
+let brickRowCount = levels[currentLevel].brickRowCount;
+let brickColumnCount = levels[currentLevel].brickColumnCount;
 let transitionTime = 3000;
 let transitioning = false;
-
 let totalBricksHit = 0;
-
-function startNextLevel() {
-    if (currentLevel < levels.length - 1) {
-        currentLevel++;
-        resetGame();
-        transitioning = true;
-        setTimeout(() => {
-            transitioning = false;
-        }, transitionTime);
-    } else {
-        alert("Congratulations! You completed all levels.");
-        document.location.reload();
-    }
-}
-
-function resetGame() {
-    brickRowCount = levels[currentLevel].brickRowCount;
-    brickColumnCount = levels[currentLevel].brickColumnCount;
-    ballSpeed *= levels[currentLevel].brickSpeedMultiplier;
-    initializeBricks();
-    score = 0;
-    bricksHit = 0;
-    lives = 3;
-    x = canvas.width / 2;
-    y = canvas.height - 30;
-    dx = ballSpeed;
-    dy = -ballSpeed;
-    paddleX = (canvas.width - paddleWidth) / 2;
-}
 
 function resizeCanvas() {
     canvas.width = window.innerWidth * 0.8;
     canvas.height = window.innerHeight * 0.8;
+    updateGameElements();
+    draw();
+}
+
+function updateGameElements() {
+    paddleWidth = canvas.width * 0.1;
+    paddleHeight = canvas.height * 0.02;
+    paddleSpeed = canvas.width * 0.02;
+    paddleX = (canvas.width - paddleWidth) / 2;
+    ballRadius = canvas.width * 0.015;
+    x = canvas.width / 2;
+    y = canvas.height - 30;
+    dx = ballSpeed;
+    dy = -ballSpeed;
+    brickPadding = canvas.width * 0.01;
+    brickOffsetTop = canvas.height * 0.05;
+    brickOffsetLeft = canvas.width * 0.03;
+    brickWidth = (canvas.width - brickOffsetLeft * 2 - (brickColumnCount - 1) * brickPadding) / brickColumnCount;
+    brickHeight = canvas.height * 0.04;
+    initializeBricks();
 }
 
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
-
-let paddleWidth = canvas.width * 0.1;
-const paddleHeight = canvas.height * 0.02;
-let paddleSpeed = canvas.width * 0.02;  // Adjust paddle speed based on canvas width
-let paddleX = (canvas.width - paddleWidth) / 2;
-
-const ballRadius = canvas.width * 0.015;
-let x = canvas.width / 2;
-let y = canvas.height - 30;
-let dx = 2;
-let dy = -2;
-
-let rightPressed = false;
-let leftPressed = false;
-
-let brickRowCount = levels[currentLevel].brickRowCount;
-let brickColumnCount = levels[currentLevel].brickColumnCount;
-const brickPadding = canvas.width * 0.01;
-const brickOffsetTop = canvas.height * 0.05;
-const brickOffsetLeft = canvas.width * 0.03;
-let brickWidth = (canvas.width - brickOffsetLeft * 2 - (brickColumnCount - 1) * brickPadding) / brickColumnCount;
-let brickHeight = canvas.height * 0.04;
-
-let bricks = [];
-initializeBricks();
-
-let score = 0;
-let lives = 3;
-let bricksHit = 0;
-let ballSpeed = 2;
-
-const powerUps = [
-    { type: "extendPaddle", color: "#ff0000" },
-    { type: "multiplyBall", color: "#00ff00" },
-    { type: "extraBalls", color: "#0000ff" },
-    { type: "extraLife", color: "#ffff00" }
-];
-
-let powerUpDropped = false;
-let powerUpX, powerUpY, powerUpType;
 
 function initializeBricks() {
     bricks = [];
@@ -331,19 +294,72 @@ document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 
 function keyDownHandler(e) {
-    if (e.key == "Right" || e.key == "ArrowRight") {
+    if (e.key === "Right" || e.key === "ArrowRight") {
         rightPressed = true;
-    } else if (e.key == "Left" || e.key == "ArrowLeft") {
+    } else if (e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = true;
     }
 }
 
 function keyUpHandler(e) {
-    if (e.key == "Right" || e.key == "ArrowRight") {
+    if (e.key === "Right" || e.key === "ArrowRight") {
         rightPressed = false;
-    } else if (e.key == "Left" || e.key == "ArrowLeft") {
+    } else if (e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = false;
     }
+}
+
+canvas.addEventListener("touchstart", handleTouchStart, false);
+canvas.addEventListener("touchmove", handleTouchMove, false);
+canvas.addEventListener("touchend", handleTouchEnd, false);
+
+function handleTouchStart(e) {
+    const touch = e.touches[0];
+    const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+    if (touchX > paddleX && touchX < paddleX + paddleWidth) {
+        paddleX = touchX - paddleWidth / 2;
+    }
+    e.preventDefault();
+}
+
+function handleTouchMove(e) {
+    const touch = e.touches[0];
+    const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+    paddleX = touchX - paddleWidth / 2;
+    e.preventDefault();
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+}
+
+function startNextLevel() {
+    if (currentLevel < levels.length - 1) {
+        currentLevel++;
+        resetGame();
+        transitioning = true;
+        setTimeout(() => {
+            transitioning = false;
+        }, transitionTime);
+    } else {
+        alert("Congratulations! You completed all levels.");
+        document.location.reload();
+    }
+}
+
+function resetGame() {
+    brickRowCount = levels[currentLevel].brickRowCount;
+    brickColumnCount = levels[currentLevel].brickColumnCount;
+    ballSpeed *= levels[currentLevel].brickSpeedMultiplier;
+    initializeBricks();
+    score = 0;
+    bricksHit = 0;
+    lives = 3;
+    x = canvas.width / 2;
+    y = canvas.height - 30;
+    dx = ballSpeed;
+    dy = -ballSpeed;
+    paddleX = (canvas.width - paddleWidth) / 2;
 }
 
 draw();
