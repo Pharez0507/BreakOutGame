@@ -1,13 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="styles.css">
-<title>Thulane Sigasa | Breakout Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thulane Sigasa | Breakout</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
-<script src="script.js"></script>
+    <div class="game-container">
+        <h1>Brixks</h1>
+        <div id="emailForm">
+            <input type="email" id="emailInput" placeholder="Enter your email" required>
+            <button id="emailSubmitBtn">Submit</button>
+        </div>
+        <canvas id="gameCanvas" style="display: none;"></canvas>
+        <div class="controls" style="display: none;">
+            <button id="startBtn">Start</button>
+            <button id="pauseBtn">Pause</button>
+        </div>
+        <div id="message"></div>
+    </div>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
+
+
